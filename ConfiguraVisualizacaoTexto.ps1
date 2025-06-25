@@ -1,4 +1,4 @@
-# SCRIPT POWERSHELL PARA ADICIONAR VISUALIZADORES DE TEXTO NO EXPLORADOR DE ARQUIVOS DO WINDOWS 11
+# SCRIPT POWERSHELL PARA ADICIONAR OU ATUALIZAR VISUALIZADORES DE TEXTO NO EXPLORADOR DO WINDOWS 11
 
 # ATENÇÃO: Recomenda-se criar um ponto de restauração manual antes da execução.
 
@@ -6,7 +6,8 @@
 
 $extensions = @(".md", ".yml", ".json", ".php", ".conf")
 $fileNamesWithoutExtension = @("Dockerfile", ".env", ".env.example")
-$previewHandlerCLSID = "{0C6C4200-3E5A-11D1-8F9B-00A0C90F26E2}"
+$previewHandlerCLSID = "{1531d583-8375-4d3f-b5fb-d23bbd169f22}"
+
 # ------------------ FUNÇÕES ------------------
 
 function Set-PreviewHandler {
@@ -19,8 +20,8 @@ function Set-PreviewHandler {
         Write-Host "  - Chave criada: $RegistryPath" -ForegroundColor Green
     }
 
-    Set-ItemProperty -LiteralPath $RegistryPath -Name "PerceivedType" -Value "text" -Force -ErrorAction Stop
-    Write-Host "  - PerceivedType definido como 'text' em '$RegistryPath'" -ForegroundColor Green
+    Set-ItemProperty -LiteralPath $RegistryPath -Name "PerceivedType" -Value "text" -Force
+    Write-Host "  - PerceivedType configurado para 'text' em '$RegistryPath'" -ForegroundColor Green
 
     $associationKeyPath = "HKCU:\Software\Classes\SystemFileAssociations\text\" + (Split-Path -Leaf $RegistryPath)
 
@@ -29,7 +30,7 @@ function Set-PreviewHandler {
         Write-Host "  - Chave de associação criada: $associationKeyPath" -ForegroundColor Green
     }
 
-    Set-ItemProperty -LiteralPath $associationKeyPath -Name "PreviewHandler" -Value $previewHandlerCLSID -Force -ErrorAction Stop
+    Set-ItemProperty -LiteralPath $associationKeyPath -Name "PreviewHandler" -Value $previewHandlerCLSID -Force
     Write-Host "  - PreviewHandler configurado em '$associationKeyPath'" -ForegroundColor Green
 }
 
@@ -58,11 +59,11 @@ try {
 
     Write-Host "`nConfiguração concluída com sucesso." -ForegroundColor Green
 
-    # Reiniciar Explorer (opcional, comentado por padrão)
-    Write-Host "`nReiniciando o Explorador..." -ForegroundColor Yellow
+    # Reiniciar Explorer automaticamente para aplicar mudanças imediatamente
+    Write-Host "`nReiniciando o Explorador do Windows para aplicar as alterações..." -ForegroundColor Yellow
     Stop-Process -Name explorer -Force
 
-    Write-Host "`nPara aplicar as alterações imediatamente, reinicie o Explorador manualmente ou faça logoff e login novamente." -ForegroundColor Yellow
+    Write-Host "`nProcesso concluído. Verifique o Painel de Visualização." -ForegroundColor Green
 
 } catch {
     Write-Host "`nErro durante a configuração: $_" -ForegroundColor Red
