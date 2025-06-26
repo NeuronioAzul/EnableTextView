@@ -4,40 +4,35 @@
 
 # ------------------ CONFIGURAÇÕES ------------------
 
-$extensions = @(".md", ".yml", ".json", ".php", ".conf")
+$extensions = @(".md", ".yml", ".json", ".php", ".conf", ".txt", ".log", ".ini", ".xml", ".csv", ".js", ".ts", ".html", ".css", ".bat", ".ps1", ".sh")
 $fileNamesWithoutExtension = @("Dockerfile", ".env", ".env.example")
 $previewHandlerCLSID = "{1531d583-8375-4d3f-b5fb-d23bbd169f22}"
 
 # ------------------ FUNÇÕES ------------------
 
-function Set-PreviewHandler {
-    param (
-        [string]$RegistryPath
-    )
+function Set-PreviewHandler($extOrFilename) {
+    $basePath = "HKCU:\Software\Classes\$extOrFilename"
+    $assocPath = "HKCU:\Software\Classes\SystemFileAssociations\text\$extOrFilename"
 
-    Write-Host "  - RegistryPath: $RegistryPath" -ForegroundColor Magenta
-
-    if (-not (Test-Path $RegistryPath)) {
-        New-Item -Path $RegistryPath -Force | Out-Null
-        Write-Host "  - Chave criada: $RegistryPath" -ForegroundColor Green
+    # Criar ou atualizar a chave principal
+    if (-not (Test-Path $basePath)) {
+        New-Item -Path $basePath -Force | Out-Null
+        Write-Host "  - Chave criada: $basePath" -ForegroundColor Green
     } else {
-        Write-Host "  - Chave já existe: $RegistryPath" -ForegroundColor Yellow
+        Write-Host "  - Chave já existe: $basePath" -ForegroundColor Yellow
     }
+    Set-ItemProperty -Path $basePath -Name "PerceivedType" -Value "text" -Force
+    Write-Host "  - PerceivedType definido para 'text' em '$basePath'" -ForegroundColor Green
 
-    Set-ItemProperty -Path $RegistryPath -Name "PerceivedType" -Value "text" -Force
-    Write-Host "  - PerceivedType configurado para 'text' em '$RegistryPath'" -ForegroundColor Green
-
-    $associationKeyPath = "HKCU:\Software\Classes\SystemFileAssociations\text\" + (Split-Path -Leaf $RegistryPath)
-
-    if (-not (Test-Path $associationKeyPath)) {
-        New-Item -Path $associationKeyPath -Force | Out-Null
-        Write-Host "  - Chave de associação criada: $associationKeyPath" -ForegroundColor Green
+    # Criar ou atualizar chave associada ao preview handler
+    if (-not (Test-Path $assocPath)) {
+        New-Item -Path $assocPath -Force | Out-Null
+        Write-Host "  - Chave criada: $assocPath" -ForegroundColor Green
     } else {
-        Write-Host "  - Chave de associação já existe: $associationKeyPath" -ForegroundColor Yellow
+        Write-Host "  - Chave já existe: $assocPath" -ForegroundColor Yellow
     }
-
-    Set-ItemProperty -Path $associationKeyPath -Name "PreviewHandler" -Value $previewHandlerCLSID -Force
-    Write-Host "  - PreviewHandler configurado em '$associationKeyPath'" -ForegroundColor Green
+    Set-ItemProperty -Path $assocPath -Name "PreviewHandler" -Value $previewHandlerCLSID -Force
+    Write-Host "  - PreviewHandler definido em '$assocPath'" -ForegroundColor Green
 }
 
 # ------------------ EXECUÇÃO COM CONFIRMAÇÃO ------------------
@@ -54,13 +49,13 @@ try {
     Write-Host "`nConfigurando extensões..." -ForegroundColor Yellow
     foreach ($ext in $extensions) {
         Write-Host "`nProcessando extensão: $ext" -ForegroundColor Cyan
-        Set-PreviewHandler -RegistryPath "HKCU:\Software\Classes\$ext"
+        Set-PreviewHandler $ext
     }
 
     Write-Host "`nConfigurando arquivos sem extensão..." -ForegroundColor Yellow
     foreach ($fileName in $fileNamesWithoutExtension) {
         Write-Host "`nProcessando arquivo: $fileName" -ForegroundColor Cyan
-        Set-PreviewHandler -RegistryPath "HKCU:\Software\Classes\$fileName"
+        Set-PreviewHandler $fileName
     }
 
     Write-Host "`nConfiguração concluída com sucesso." -ForegroundColor Green
