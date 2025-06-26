@@ -15,12 +15,16 @@ function Set-PreviewHandler {
         [string]$RegistryPath
     )
 
+    Write-Host "  - RegistryPath: $RegistryPath" -ForegroundColor Magenta
+
     if (-not (Test-Path $RegistryPath)) {
         New-Item -Path $RegistryPath -Force | Out-Null
         Write-Host "  - Chave criada: $RegistryPath" -ForegroundColor Green
+    } else {
+        Write-Host "  - Chave já existe: $RegistryPath" -ForegroundColor Yellow
     }
 
-    Set-ItemProperty -LiteralPath $RegistryPath -Name "PerceivedType" -Value "text" -Force
+    Set-ItemProperty -Path $RegistryPath -Name "PerceivedType" -Value "text" -Force
     Write-Host "  - PerceivedType configurado para 'text' em '$RegistryPath'" -ForegroundColor Green
 
     $associationKeyPath = "HKCU:\Software\Classes\SystemFileAssociations\text\" + (Split-Path -Leaf $RegistryPath)
@@ -28,9 +32,11 @@ function Set-PreviewHandler {
     if (-not (Test-Path $associationKeyPath)) {
         New-Item -Path $associationKeyPath -Force | Out-Null
         Write-Host "  - Chave de associação criada: $associationKeyPath" -ForegroundColor Green
+    } else {
+        Write-Host "  - Chave de associação já existe: $associationKeyPath" -ForegroundColor Yellow
     }
 
-    Set-ItemProperty -LiteralPath $associationKeyPath -Name "PreviewHandler" -Value $previewHandlerCLSID -Force
+    Set-ItemProperty -Path $associationKeyPath -Name "PreviewHandler" -Value $previewHandlerCLSID -Force
     Write-Host "  - PreviewHandler configurado em '$associationKeyPath'" -ForegroundColor Green
 }
 
